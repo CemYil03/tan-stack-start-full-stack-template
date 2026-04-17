@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commitlint:
+    name: Commit lint
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm install -g npm@11.12.0
+
+      - run: npm ci
+
+      - name: Lint commits (PR)
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Lint commits (push)
+        if: github.event_name == 'push'
+        run: |
+          if ! git cat-file -e ${{ github.event.before }}^{commit} 2>/dev/null; then
+            echo "Base commit not found (new branch or force push) — skipping commitlint"
+            exit 0
+          fi
+          npx commitlint --from ${{ github.event.before }} --to ${{ github.event.after }} --verbose
+
+  codegen:
+    name: Codegen freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm install -g npm@11.12.0
+
+      - run: npm ci
+
+      - name: GraphQL codegen
+        run: npm run graphql:generate
+
+      - name: DB codegen
+        run: npm run db:generate
+
+      - name: Check for uncommitted changes
+        run: |
+          git diff --exit-code -- '*.gen.ts' '*.generated.ts' 'drizzle/'
+          git ls-files --others --exclude-standard -- '*.gen.ts' '*.generated.ts' 'drizzle/' | grep . && exit 1 || true
+
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm install -g npm@11.12.0
+
+      - run: npm ci
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Spell
+        run: npm run spell:check
+
+      - name: Types
+        run: npm run type:check
+
+      - name: Usage
+        run: npm run usage:check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm install -g npm@11.12.0
+
+      - run: npm ci
+
+      - name: Run migrations
+        run: npm run db:push
+
+      - name: Test
+        run: npm test

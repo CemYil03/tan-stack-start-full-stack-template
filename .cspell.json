@@ -1,0 +1,32 @@
+{
+    "ignorePaths": [".output", ".tanstack", "node_modules", "package-lock.json", "dist", "drizzle", "storybook-static"],
+    "words": [
+        "autodocs",
+        "buildx",
+        "codegen",
+        "Coolify",
+        "effectful",
+        "ghcr",
+        "graphqls",
+        "hoverable",
+        "isready",
+        "knip",
+        "lintignore",
+        "nvmrc",
+        "pgboss",
+        "rsbuild",
+        "skullbuster",
+        "tanstack",
+        "transactionally",
+        "unlisten",
+        "unstub",
+        "urlset",
+        "urql",
+        "varchar",
+        "vaul",
+        "vinxi",
+        "zodv"
+    ],
+    // https://cspell.org/docs/dictionaries/
+    "dictionaries": ["typescript", "node", "html", "css"]
+}

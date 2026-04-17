@@ -1,0 +1,36 @@
+{
+    "$schema": "https://unpkg.com/knip@6/schema.json",
+    "tags": ["-lintignore"],
+    "ignore": [
+        "src/server/graphql/generated.ts",
+        "src/web/graphql/generated.ts",
+
+        "src/server/graphql/extensions.ts",
+        "src/web/components/ThemeToggle.tsx",
+
+        "src/server/graphql/PubSubPostgres.ts",
+        "src/server/graphql/server.ts",
+        "src/server/jobs/index.ts",
+        "src/server/jobs/types.ts",
+        "src/web/components/base/**/*.tsx",
+        "src/web/hooks/use-mobile.ts",
+        ".storybook/vite.config.ts"
+    ],
+    "ignoreDependencies": [
+        "@tanstack/react-devtools",
+        "@tanstack/react-form",
+        "@tanstack/react-router-devtools",
+        "@tanstack/react-router-ssr-query",
+        "@tanstack/router-plugin",
+        "ai",
+        "graphql-subscriptions",
+        "playwright",
+        "streamdown",
+        "@graphql-codegen/client-preset",
+        "@testing-library/dom",
+        "@testing-library/react",
+        "graphql-codegen-typescript-validation-schema",
+        "@graphql-codegen/typescript-validation-schema",
+        "vaul"
+    ]
+}

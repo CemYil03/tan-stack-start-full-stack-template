@@ -1,0 +1,38 @@
+scalar DateTime
+
+input UserCreate {
+    name: String!
+}
+
+type User {
+    userId: ID!
+    name: String!
+}
+
+type Session {
+    sessionId: ID!
+    user: User
+}
+
+type MutationResult {
+    success: Boolean!
+    referenceId: ID
+}
+
+type UserMutation {
+    terminateSessions(sessionIds: [ID!]!): MutationResult!
+}
+
+type Query {
+    currentSession: Session!
+}
+
+type Mutation {
+    userCreate(user: UserCreate!): MutationResult!
+    user: UserMutation!
+}
+
+type Subscription {
+    userUpdates: User!
+    generationChunkUpdates(generationId: String!): String!
+}

@@ -1,0 +1,7 @@
+query HomePage {
+    currentSession {
+        user {
+            name
+        }
+    }
+}

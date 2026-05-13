@@ -1,5 +1,6 @@
 {
     "ignorePaths": [".output", ".tanstack", "node_modules", "package-lock.json", "dist", "drizzle", "storybook-static"],
+    "import": ["@cspell/dict-de-de/cspell-ext.json"],
     "words": [
         "autodocs",
         "buildx",
@@ -28,5 +29,5 @@
         "zodv"
     ],
     // https://cspell.org/docs/dictionaries/
-    "dictionaries": ["typescript", "node", "html", "css"]
+    "dictionaries": ["typescript", "node", "html", "css", "de-de"]
 }

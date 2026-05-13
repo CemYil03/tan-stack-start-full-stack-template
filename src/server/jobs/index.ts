@@ -11,6 +11,7 @@ export async function ensureJobsStarted(serverRuntime: ServerRuntime): Promise<v
     workersRegistered = true;
 
     for (const definition of jobDefinitions) {
+        await boss.createQueue(definition.name);
         await boss.work(definition.name, async (jobs) => {
             const job = jobs[0]!;
             await definition.handler({ data: job.data, serverRuntime });

@@ -8,6 +8,9 @@ const globalRef = globalThis as unknown as { __pgBoss?: PgBoss; __pgBossStartPro
 export async function ensureBossStarted(): Promise<PgBoss> {
     if (!globalRef.__pgBoss) {
         globalRef.__pgBoss = new PgBoss(process.env.DATABASE_URL!);
+        globalRef.__pgBoss.on('error', (error) => {
+            console.error('[pg-boss]', error.message);
+        });
     }
 
     if (!globalRef.__pgBossStartPromise) {

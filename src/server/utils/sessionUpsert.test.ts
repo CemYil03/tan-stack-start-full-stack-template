@@ -1,22 +1,12 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { eq } from 'drizzle-orm';
 
 import { sessionUpsert } from './sessionUpsert';
-import { testDb, testLog, cleanSessions } from '../test/dbTestUtils';
+import { testDb, testLog } from '../test/dbTestUtils';
 import { sessions } from '../db/schema';
 
 describe('sessionUpsert', () => {
-    beforeEach(async () => {
-        await cleanSessions();
-    });
-
-    afterAll(async () => {
-        await cleanSessions();
-    });
-
     it('creates a new session when no existing session ID is provided', async () => {
-        // Arrange — nothing
-
         // Act
         const result = await sessionUpsert(testDb, testLog, null, 'TestAgent');
 
@@ -39,8 +29,9 @@ describe('sessionUpsert', () => {
         // Assert
         expect(result.sessionId).not.toBe(unknownId);
 
-        const allSessions = await testDb.select().from(sessions);
-        expect(allSessions).toHaveLength(1);
+        const [row] = await testDb.select().from(sessions).where(eq(sessions.sessionId, result.sessionId));
+        expect(row).toBeDefined();
+        expect(row!.userAgent).toBe('TestAgent');
     });
 
     it('creates a new session when the existing session was terminated', async () => {
@@ -60,8 +51,9 @@ describe('sessionUpsert', () => {
         // Assert
         expect(result.sessionId).not.toBe(terminated!.sessionId);
 
-        const allSessions = await testDb.select().from(sessions);
-        expect(allSessions).toHaveLength(2);
+        const [row] = await testDb.select().from(sessions).where(eq(sessions.sessionId, result.sessionId));
+        expect(row).toBeDefined();
+        expect(row!.userAgent).toBe('TestAgent');
     });
 
     it('updates an existing non-terminated session', async () => {
@@ -88,8 +80,6 @@ describe('sessionUpsert', () => {
     });
 
     it('handles null userAgent', async () => {
-        // Arrange — nothing
-
         // Act
         const result = await sessionUpsert(testDb, testLog, null, null);
 

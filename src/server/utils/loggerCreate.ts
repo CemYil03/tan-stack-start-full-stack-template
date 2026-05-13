@@ -11,6 +11,7 @@ export interface Logger {
     warn: (input: LogInput, session?: LogSession) => void;
     info: (input: LogInput, session?: LogSession) => void;
     debug: (input: LogInput, session?: LogSession) => void;
+    drain: () => Promise<void>;
 }
 
 function normalize(input: LogInput): { message: string; context: Record<string, unknown> | undefined } {
@@ -20,15 +21,18 @@ function normalize(input: LogInput): { message: string; context: Record<string, 
     return { message: String(input), context: undefined };
 }
 
-function logPersist(db: Database, level: LogLevel, message: string, sessionId?: string, context?: Record<string, unknown>) {
-    db.insert(logs).values({ logId: crypto.randomUUID(), level, message, sessionId, context }).catch(console.error);
-}
-
 export function loggerCreate(db: Database): Logger {
+    const pending: Promise<unknown>[] = [];
+
+    function logPersist(level: LogLevel, message: string, sessionId?: string, context?: Record<string, unknown>) {
+        const promise = db.insert(logs).values({ logId: crypto.randomUUID(), level, message, sessionId, context }).catch(console.error);
+        pending.push(promise);
+    }
+
     function log(level: LogLevel, input: LogInput, session?: LogSession) {
         const { message, context } = normalize(input);
         console[level](message, context);
-        logPersist(db, level, message, session?.sessionId, context);
+        logPersist(level, message, session?.sessionId, context);
     }
 
     return {
@@ -36,5 +40,9 @@ export function loggerCreate(db: Database): Logger {
         warn: (input, session) => log('warn', input, session),
         info: (input, session) => log('info', input, session),
         debug: (input, session) => log('debug', input, session),
+        async drain() {
+            await Promise.allSettled(pending);
+            pending.length = 0;
+        },
     };
 }
